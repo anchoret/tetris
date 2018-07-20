@@ -1,26 +1,26 @@
-import {Observable, BehaviorSubject} from 'rxjs';
+import {Observable, BehaviorSubject, Subject} from 'rxjs';
+import {map, first, takeWhile, switchMap, share, takeUntil} from 'rxjs/operators';
+import {of} from 'rxjs/observable/of';
 import {interval} from 'rxjs/observable/interval';
 import {fromEvent} from 'rxjs/observable/fromEvent';
-import {TRANSFORMATIONS} from './transformations';
-import {map, filter, scan, first, takeWhile, switchMap, share, switchAll, takeUntil, mergeAll, mergeMap} from 'rxjs/operators';
-import {generateFigure, nextTransformation} from './utils';
-import {of} from 'rxjs/observable/of';
 import {animationFrame} from 'rxjs/scheduler/animationFrame';
 import {Figure} from './types';
 import {MAX_FPS, START_SPEED} from './constants';
+import {generateFigure} from './utils';
 
-let gameSpeed$ = new BehaviorSubject<number>(START_SPEED).pipe(
-
-);
+let gameOver$ = new Subject();
+let gameSpeed$ = new BehaviorSubject<number>(START_SPEED);
 let ticks$ = gameSpeed$.pipe(
-    switchMap(speed => interval(Math.floor(1000 / speed)))
+    switchMap(speed => interval(Math.floor(1000 / speed))),
+    takeUntil(gameOver$),
 );
 
 let click$ = fromEvent(document, 'click');
 
 
 function createGame(fps$: Observable<number>): Observable<number> {
-console.log('START CREATE GAME');
+    console.log('START CREATE GAME');
+    ticks$.subscribe(x => console.log('tick #' + x));
     let nextFigure = new BehaviorSubject<Figure>(generateFigure());
     nextFigure.subscribe(fig => console.dir(fig));
 
@@ -41,11 +41,13 @@ const startGame = () => {
         next: () => console.log('StartGame -> next'),
         complete: () => {
             console.log('StartGame -> complete');
-
+            gameOver$.next(true);
             click$.pipe(first()).subscribe(startGame);
         }
     });
     game$.subscribe(x => console.log('Получили: ' + x));
 };
+
+
 
 startGame();
