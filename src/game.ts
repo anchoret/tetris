@@ -1,12 +1,12 @@
 import {Observable, BehaviorSubject, Subject} from 'rxjs';
-import {map, first, takeWhile, switchMap, share, takeUntil, scan, filter} from 'rxjs/operators';
+import {map, first, takeWhile, switchMap, share, takeUntil, pairwise} from 'rxjs/operators';
 import {of} from 'rxjs/observable/of';
 import {interval} from 'rxjs/observable/interval';
 import {fromEvent} from 'rxjs/observable/fromEvent';
 import {animationFrame} from 'rxjs/scheduler/animationFrame';
 import {Figure} from './types';
 import {MAX_FPS, START_SPEED} from './constants';
-import {generateFigure, calculateFigure} from './utils';
+import {generateFigure} from './utils';
 
 let gameOver$ = new Subject();
 let click$ = fromEvent(document, 'click');
@@ -25,9 +25,8 @@ function createGame(fps$: Observable<number>): Observable<number> {
     nextFigure$.subscribe(fig => { console.log('Next>'); console.dir(fig); });
 
     let currentFigure$ = nextFigure$.pipe(
-        scan(calculateFigure, []),
-        filter(acc => acc.length > 1),
-        map(acc => acc[0]),
+        pairwise(),
+        map(pair => pair[0]),
     );
     currentFigure$.subscribe(fig => { console.log('Current>'); console.dir(fig); });
 
