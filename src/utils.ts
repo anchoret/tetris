@@ -1,10 +1,7 @@
-import {Color, Figure, FigureBody, Point2D} from './types';
+import {Color, Figure, FigureBody, KeyCode, Point2D, Transformation} from './types';
 import {FIGURE_BODIES} from './figure_bodies';
 import {PLAYING_FILED_WIDTH} from './constants';
-
-export function nextTransformation(previous, next) {
-    return next;
-}
+import {TRANSFORMATIONS} from './transformations';
 
 export function generateFigure(): Figure {
     let figureBody: FigureBody = generateFigureBody();
@@ -13,13 +10,8 @@ export function generateFigure(): Figure {
     return new Figure(startPosition, figureBody, generateColor());
 }
 
-export function calculateFigure (acc: Figure[], next: Figure): Figure[] {
-    acc.push(next);
-    if (acc.length > 2) {
-        acc.shift();
-    }
-
-    return acc;
+export function createGravityTransformation(): Transformation {
+    return TRANSFORMATIONS[KeyCode.DOWN];
 }
 
 function generateFigureStartPosition(figureBody: FigureBody): Point2D {

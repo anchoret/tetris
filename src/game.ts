@@ -4,9 +4,10 @@ import {of} from 'rxjs/observable/of';
 import {interval} from 'rxjs/observable/interval';
 import {fromEvent} from 'rxjs/observable/fromEvent';
 import {animationFrame} from 'rxjs/scheduler/animationFrame';
-import {Figure} from './types';
+import {Figure, Transformation} from './types';
 import {MAX_FPS, START_SPEED} from './constants';
-import {generateFigure} from './utils';
+import {createGravityTransformation, generateFigure} from './utils';
+
 
 let gameOver$ = new Subject();
 let click$ = fromEvent(document, 'click');
@@ -18,8 +19,15 @@ function createGame(fps$: Observable<number>): Observable<number> {
     let ticks$ = gameSpeed$.pipe(
         switchMap(speed => interval(Math.floor(1000 / speed))),
         takeUntil(gameOver$),
+        share(),
     );
     ticks$.subscribe(x => console.log('tick #' + x));
+
+    let gravityTransformations$ = ticks$.pipe(
+        map((): Transformation => createGravityTransformation()),
+    );
+
+    gravityTransformations$.subscribe(item => console.dir(item));
 
     let nextFigure$ = new BehaviorSubject<Figure>(generateFigure());
     nextFigure$.subscribe(fig => { console.log('Next>'); console.dir(fig); });
