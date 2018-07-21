@@ -1,16 +1,27 @@
 import {Observable, BehaviorSubject, Subject} from 'rxjs';
-import {map, first, takeWhile, switchMap, share, takeUntil, pairwise} from 'rxjs/operators';
+import {
+    map,
+    first,
+    takeWhile,
+    switchMap,
+    share,
+    takeUntil,
+    pairwise,
+    filter, bufferWhen,
+} from 'rxjs/operators';
 import {of} from 'rxjs/observable/of';
 import {interval} from 'rxjs/observable/interval';
 import {fromEvent} from 'rxjs/observable/fromEvent';
+import {merge} from 'rxjs/observable/merge';
 import {animationFrame} from 'rxjs/scheduler/animationFrame';
 import {Figure, Transformation} from './types';
 import {MAX_FPS, START_SPEED} from './constants';
-import {createGravityTransformation, generateFigure} from './utils';
+import {createGravityTransformation, generateFigure, getManualTransformation} from './utils';
 
 
 let gameOver$ = new Subject();
 let click$ = fromEvent(document, 'click');
+let keydown$ = fromEvent(document, 'keydown');
 
 
 function createGame(fps$: Observable<number>): Observable<number> {
@@ -23,12 +34,6 @@ function createGame(fps$: Observable<number>): Observable<number> {
     );
     ticks$.subscribe(x => console.log('tick #' + x));
 
-    let gravityTransformations$ = ticks$.pipe(
-        map((): Transformation => createGravityTransformation()),
-    );
-
-    gravityTransformations$.subscribe(item => console.dir(item));
-
     let nextFigure$ = new BehaviorSubject<Figure>(generateFigure());
     nextFigure$.subscribe(fig => { console.log('Next>'); console.dir(fig); });
 
@@ -38,8 +43,25 @@ function createGame(fps$: Observable<number>): Observable<number> {
     );
     currentFigure$.subscribe(fig => { console.log('Current>'); console.dir(fig); });
 
+    let gravityTransformations$ = ticks$.pipe(
+        map((): Transformation => createGravityTransformation()),
+    );
+
+    let manualTransformations$ = keydown$.pipe(
+        map((event: KeyboardEvent) => getManualTransformation(event.code)),
+        filter(transformation => !!transformation),
+        takeUntil(gameOver$),
+    );
+
+    let allTransformations$ = merge(gravityTransformations$, manualTransformations$)
+        .pipe(
+            bufferWhen(() => fps$),
+            filter((buffer: Array<Transformation>) => buffer.length > 0),
+        );
+    allTransformations$.subscribe(item => { console.log('All>'); console.dir(item); });
+
     return fps$.pipe(
-        map(counter => counter * 2)
+        map(counter => counter)
     );
 }
 

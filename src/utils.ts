@@ -14,6 +14,10 @@ export function createGravityTransformation(): Transformation {
     return TRANSFORMATIONS[KeyCode.DOWN];
 }
 
+export function getManualTransformation(keyCode: string): Transformation | undefined {
+    return TRANSFORMATIONS[keyCode];
+}
+
 function generateFigureStartPosition(figureBody: FigureBody): Point2D {
     let figureWidth = figureBody[0].length;
     let startX = Math.ceil(PLAYING_FILED_WIDTH / 2 - figureWidth / 2);
