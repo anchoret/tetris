@@ -7,7 +7,10 @@ import {
     share,
     takeUntil,
     pairwise,
-    filter, bufferWhen,
+    filter,
+    bufferWhen,
+    startWith,
+    scan,
 } from 'rxjs/operators';
 import {of} from 'rxjs/observable/of';
 import {interval} from 'rxjs/observable/interval';
@@ -15,8 +18,14 @@ import {fromEvent} from 'rxjs/observable/fromEvent';
 import {merge} from 'rxjs/observable/merge';
 import {animationFrame} from 'rxjs/scheduler/animationFrame';
 import {Figure, Transformation} from './types';
-import {MAX_FPS, START_SPEED} from './constants';
-import {createGravityTransformation, generateFigure, getManualTransformation} from './utils';
+import {MAX_FPS} from './constants';
+import {
+    calculateLevel,
+    calculateSpeed,
+    createGravityTransformation,
+    generateFigure,
+    getManualTransformation
+} from './utils';
 
 
 let gameOver$ = new Subject();
@@ -26,7 +35,21 @@ let keydown$ = fromEvent(document, 'keydown');
 
 function createGame(fps$: Observable<number>): Observable<number> {
     console.log('START CREATE GAME');
-    let gameSpeed$ = new BehaviorSubject<number>(START_SPEED);
+    let receivedPoints$ = new BehaviorSubject<number>(0);
+    let score$ = receivedPoints$.pipe(
+        scan((acc: number, points: number): number => acc + points, 0),
+    );
+    let level$ = score$.pipe(
+        map(calculateLevel),
+        startWith(0),
+        pairwise(),
+        filter(pair => pair[1] > pair[0]),
+        map(pair => pair[1]),
+    );
+    let gameSpeed$ = level$.pipe(
+        map(level => calculateSpeed(level)),
+    );
+
     let ticks$ = gameSpeed$.pipe(
         switchMap(speed => interval(Math.floor(1000 / speed))),
         takeUntil(gameOver$),

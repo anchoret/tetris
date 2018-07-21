@@ -1,6 +1,12 @@
 import {Color, Figure, FigureBody, KeyCode, Point2D, Transformation} from './types';
 import {FIGURE_BODIES} from './figure_bodies';
-import {PLAYING_FILED_WIDTH} from './constants';
+import {
+    PLAYING_FILED_WIDTH,
+    POINTS_TO_INCREASE_LEVEL,
+    SPEED_INCREASE_COEFFICIENT,
+    START_LEVEL,
+    START_SPEED
+} from './constants';
 import {TRANSFORMATIONS} from './transformations';
 
 export function generateFigure(): Figure {
@@ -16,6 +22,15 @@ export function createGravityTransformation(): Transformation {
 
 export function getManualTransformation(keyCode: string): Transformation | undefined {
     return TRANSFORMATIONS[keyCode];
+}
+
+export function calculateLevel(points: number): number {
+    let newLevel: number = Math.floor(points / POINTS_TO_INCREASE_LEVEL);
+    return newLevel < START_LEVEL ? START_LEVEL : newLevel;
+}
+
+export function calculateSpeed(level: number): number {
+    return START_SPEED + (level - 1) * SPEED_INCREASE_COEFFICIENT;
 }
 
 function generateFigureStartPosition(figureBody: FigureBody): Point2D {
