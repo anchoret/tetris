@@ -37,7 +37,7 @@ module.exports = (env, options) => {
                 {
                     test: /\.ts$/,
                     exclude: [/node_modules/],
-                    use: "awesome-typescript-loader"
+                    loader: "awesome-typescript-loader"
                 }
             ]
         },
@@ -58,4 +58,3 @@ module.exports = (env, options) => {
         }
     };
 }
-
