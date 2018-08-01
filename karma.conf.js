@@ -7,7 +7,10 @@ module.exports = function(config) {
   config.set({
     basePath: '',
     frameworks: ['mocha', 'chai'],
-    files: ['test/**/*.ts'],
+    files: [
+        'test/**/*.ts',
+        {pattern: 'src/**/*.ts', included: false, served: false},
+    ],
     exclude: [],
     preprocessors: {
       'test/**/*.ts': ["webpack", "sourcemap"]
@@ -34,6 +37,11 @@ module.exports = function(config) {
     autoWatch: true,
     browsers: [],
     singleRun: false,
-    concurrency: Infinity
+    concurrency: Infinity,
+    client: {
+      mocha: {
+        reporter: 'html',
+      }
+    }
   })
 }
