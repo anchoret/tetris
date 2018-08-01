@@ -6,7 +6,7 @@ let webpack = require("webpack");
 module.exports = function(config) {
   config.set({
     basePath: '',
-    frameworks: ['mocha', 'chai'],
+    frameworks: ['mocha', 'chai', 'sinon'],
     files: [
         'test/**/*.ts',
         {pattern: 'src/**/*.ts', included: false, served: false},
