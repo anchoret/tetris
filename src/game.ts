@@ -26,6 +26,13 @@ import {
     generateFigure,
     getManualTransformation
 } from './utils';
+import {
+    createGameSpeed,
+    createLevel,
+    createNonNegativeReceivedPoints,
+    createReceivedPointsSubject,
+    createScore
+} from './observables';
 
 
 let gameOver$ = new Subject();
@@ -35,20 +42,11 @@ let keydown$ = fromEvent(document, 'keydown');
 
 function createGame(fps$: Observable<number>): Observable<number> {
     console.log('START CREATE GAME');
-    let receivedPoints$ = new BehaviorSubject<number>(0);
-    let score$ = receivedPoints$.pipe(
-        scan((acc: number, points: number): number => acc + points, 0),
-    );
-    let level$ = score$.pipe(
-        map(calculateLevel),
-        startWith(0),
-        pairwise(),
-        filter(pair => pair[1] > pair[0]),
-        map(pair => pair[1]),
-    );
-    let gameSpeed$ = level$.pipe(
-        map(level => calculateSpeed(level)),
-    );
+    let receivedPointsSubject$ = createReceivedPointsSubject(0);
+    let nonNegativeReceivedPoints$ = createNonNegativeReceivedPoints(receivedPointsSubject$);
+    let score$ = createScore(nonNegativeReceivedPoints$);
+    let level$ = createLevel(score$);
+    let gameSpeed$ = createGameSpeed(level$);
 
     let ticks$ = gameSpeed$.pipe(
         switchMap(speed => interval(Math.floor(1000 / speed))),
