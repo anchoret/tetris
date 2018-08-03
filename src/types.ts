@@ -4,7 +4,9 @@ export interface Point2D {
 }
 
 export interface Transformation {
-
+    name: string;
+    apply: (figure: Figure, set: Set) => Figure;
+    corrigible: boolean;
 }
 
 export interface Transformations {
@@ -31,44 +33,44 @@ export type Matrix<T> = Array<Array<T>>;
 
 export type FigureBody = Matrix<boolean>;
 
-export interface FigureInterface {
-    position: Point2D;
-    body: FigureBody;
-    color: Color;
-}
+export type Set = Array<Array<SetCell>>;
 
-export class Figure implements FigureInterface {
-    private _position: Point2D;
-    private _body: FigureBody;
-    private _color: Color;
+export class Figure {
+    readonly position: Point2D;
+    readonly body: FigureBody;
+    readonly color: Color;
 
     constructor(position: Point2D, body: FigureBody, color: Color) {
         this.position = position;
         this.body = body;
         this.color = color;
     }
+}
 
-    get position(): Point2D {
-        return this._position;
-    }
+export class PlayingField {
+    readonly nextFigure: Figure;
+    readonly currentFigure: Figure;
+    readonly set: Set;
+    readonly score: number;
+    readonly level: number;
 
-    set position(value: Point2D) {
-        this._position = value;
-    }
 
-    get body(): FigureBody {
-        return this._body;
+    constructor(
+        nextFigure: Figure,
+        currentFigure: Figure,
+        set: Set,
+        score: number,
+        level: number
+    ) {
+        this.nextFigure = nextFigure;
+        this.currentFigure = currentFigure;
+        this.set = set;
+        this.score = score;
+        this.level = level;
     }
+}
 
-    set body(value: FigureBody) {
-        this._body = value;
-    }
-
-    get color(): Color {
-        return this._color;
-    }
-
-    set color(value: Color) {
-        this._color = value;
-    }
+export interface SetCell {
+    position: Point2D;
+    color: Color;
 }
