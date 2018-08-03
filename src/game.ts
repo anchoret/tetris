@@ -11,7 +11,7 @@ import {
     bufferWhen,
     withLatestFrom,
     scan,
-    startWith,
+    startWith, skip,
 } from 'rxjs/operators';
 import {of} from 'rxjs/observable/of';
 import {interval} from 'rxjs/observable/interval';
@@ -35,15 +35,15 @@ import {
     createReceivedPointsSubject,
     createScore
 } from './observables';
+import {createCanvasElement, renderGameOver, renderPlayingField} from './graphics';
 
-
+let renderingContext = createCanvasElement();
 let gameOver$ = new Subject();
 let click$ = fromEvent(document, 'click');
 let keydown$ = fromEvent(document, 'keydown');
 
 
 function createGame(fps$: Observable<number>): Observable<PlayingField> {
-    console.log('START CREATE GAME');
     let receivedPointsSubject$ = createReceivedPointsSubject(0);
     let nonNegativeReceivedPoints$ = createNonNegativeReceivedPoints(receivedPointsSubject$);
     let score$ = createScore(nonNegativeReceivedPoints$);
@@ -77,13 +77,12 @@ function createGame(fps$: Observable<number>): Observable<PlayingField> {
     let set$ = new BehaviorSubject<Set>(generateEmptySet());
     set$.subscribe(_ => nextFigure$.next(generateFigure()));
     set$.pipe(
+        skip(1),
         map(set => {
-            console.dir(set);
             return 5;
         }),
         filter(points => points > 0),
     ).subscribe((receivedPoints: number) => {
-        console.log('points');
         receivedPointsSubject$.next(receivedPoints);
     });
 
@@ -99,7 +98,6 @@ function createGame(fps$: Observable<number>): Observable<PlayingField> {
         map(data => data.processedFigure),
         share(),
     );
-    currentFigure$.subscribe(figure => { console.log('Figure>>'); console.dir(figure); });
 
     return allTransformations$.pipe(
         withLatestFrom(
@@ -123,9 +121,9 @@ let game$ = of('Start Game').pipe(
 
 const startGame = () => {
     game$.subscribe({
-        next: () => console.log('Render'),
+        next: (playingField) => { renderPlayingField(renderingContext, playingField); },
         complete: () => {
-            console.log('Render Game Over');
+            renderGameOver(renderingContext);
             gameOver$.next(true);
             click$.pipe(first()).subscribe(startGame);
         }

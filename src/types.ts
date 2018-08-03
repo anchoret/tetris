@@ -33,7 +33,7 @@ export type Matrix<T> = Array<Array<T>>;
 
 export type FigureBody = Matrix<boolean>;
 
-export type Set = Array<Array<SetCell>>;
+export type Set = Array<Array<Color>>;
 
 export class Figure {
     readonly position: Point2D;
@@ -68,9 +68,4 @@ export class PlayingField {
         this.score = score;
         this.level = level;
     }
-}
-
-export interface SetCell {
-    position: Point2D;
-    color: Color;
 }

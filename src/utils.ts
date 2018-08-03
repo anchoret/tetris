@@ -1,8 +1,8 @@
 import {Color, Figure, FigureBody, KeyCode, Point2D, Set, Transformation} from './types';
 import {FIGURE_BODIES} from './figure_bodies';
 import {
-    PLAYING_FILED_HEIGHT,
-    PLAYING_FILED_WIDTH,
+    PLAYING_FILED_ROWS,
+    PLAYING_FILED_COLUMNS,
     POINTS_TO_INCREASE_LEVEL,
     SPEED_INCREASE_COEFFICIENT,
     START_LEVEL,
@@ -48,7 +48,7 @@ export function applyTransformations(
     let currentSet = set.getValue();
 
     for (let transformation of transformations) {
-        let newFigure = transformation.apply(processedFigure, set);
+        let newFigure = transformation.apply(processedFigure, currentSet);
 
         if (transformation.corrigible) {
             if (checkPlayingFieldCollision(newFigure)) {
@@ -74,17 +74,12 @@ export function applyTransformations(
 }
 
 export function generateEmptySet(): Set {
-    let set = new Array(PLAYING_FILED_WIDTH);
-    for (let i = 0; i < set.length; i++) {
-        set[i] = new Array();
-    }
-
-    return set;
+    return generateTwoDimensionArray(PLAYING_FILED_COLUMNS);
 }
 
 export function isSetOverflow(set: Set): boolean {
     for (let columnNumber = 0; columnNumber < set.length; columnNumber++) {
-        if (set[columnNumber].length > 1 /*PLAYING_FILED_HEIGHT*/) {
+        if (set[columnNumber].length >= PLAYING_FILED_ROWS) {
             return true;
         }
     }
@@ -92,13 +87,60 @@ export function isSetOverflow(set: Set): boolean {
     return false;
 }
 
+export function figureBodyIterator(
+    figure: Figure,
+    filledCellCallBack?: (cellNumber: number, lineNumber: number, color: Color) => void,
+    emptyCellCallBack?:  (cellNumber: number, lineNumber: number) => void
+) {
+    figure.body.forEach((line, lineNumber) => {
+        line.forEach((isCellFill, cellNumber) => {
+            if (isCellFill && filledCellCallBack) {
+                filledCellCallBack(cellNumber, lineNumber, figure.color);
+            } else if (!isCellFill && emptyCellCallBack) {
+                emptyCellCallBack(cellNumber, lineNumber);
+            }
+        });
+    });
+}
+
+export function copyPoint2D(position: Point2D): Point2D {
+    return {
+        x: position.x,
+        y: position.y,
+    };
+}
+
+export function generateTwoDimensionArray(height: number, width?: number): Array<Array<any>> {
+    if (width === undefined ) {
+        width = height;
+    }
+
+    let array = new Array(height);
+    for (let i = 0; i < height; i++) {
+        array[i] = new Array();
+    }
+
+    return array;
+}
+
+export function getFigureHeight(figure: Figure): number {
+    return figure.body.length;
+}
+
+export function getFigureWidth(figure: Figure): number {
+    return figure.body[0].length;
+}
+
+export function calculatePlayingFieldRowNumber (setRowNumber: number): number {
+    return Math.abs(PLAYING_FILED_ROWS - setRowNumber - 1);
+}
+
 function checkPlayingFieldCollision(figure: Figure): boolean {
-    console.log('checkPlayingFieldCollision');
     if (
         figure.position.x < 0
-        || figure.position.x + figure.body[0].length - 1 >= PLAYING_FILED_WIDTH
+        || figure.position.x + getFigureWidth(figure) - 1 >= PLAYING_FILED_COLUMNS
         || figure.position.y < 0
-        || figure.position.y + figure.body.length - 1 >= PLAYING_FILED_HEIGHT
+        || figure.position.y + getFigureHeight(figure) - 1 >= PLAYING_FILED_ROWS
     ) {
         return true;
     }
@@ -107,31 +149,58 @@ function checkPlayingFieldCollision(figure: Figure): boolean {
 }
 
 function correctPlayingFieldCollision(figure: Figure): Figure {
-    console.log('correctPlayingFieldCollision');
+    let figureWidth = getFigureWidth(figure);
+    let figureHeight = getFigureHeight(figure);
+    let position = {
+        x: figure.position.x < 0 ?
+            0 : (figure.position.x + figureWidth - 1) >= PLAYING_FILED_COLUMNS ?
+                (PLAYING_FILED_COLUMNS - figureWidth) : figure.position.x,
+        y: figure.position.y < 0 ?
+            0 : (figure.position.y + figureHeight - 1) >= PLAYING_FILED_ROWS ?
+                (PLAYING_FILED_ROWS - figureHeight) : figure.position.y,
+    };
 
-    return figure;
+    return new Figure(position, figure.body, figure.color);
 }
 
 function checkSetCollision(set: Set, figure: Figure): boolean {
-    console.log('checkSetCollision');
+    let initX = figure.position.x;
+    let initY = figure.position.y;
+    let collision = false;
 
-    return false;
+    figureBodyIterator(figure, (cellNumber, lineNumber, color) => {
+        let setRowNumber = calculateSetRowNumber(initY + lineNumber);
+        let setColumnNumber = initX + cellNumber;
+        if (set[setColumnNumber][setRowNumber]) {
+            collision = true;
+
+            return;
+        }
+    });
+
+    return collision;
 }
 
 function replenishSet(set: Set, figure: Figure): Set {
-    console.log('replenishSet');
+    let initX = figure.position.x;
+    let initY = figure.position.y;
 
-    set[0].push({
-        position: figure.position,
-        color: figure.color,
+    figureBodyIterator(figure, (cellNumber, lineNumber, color) => {
+        let setRowNumber = calculateSetRowNumber(initY + lineNumber);
+        let setColumnNumber = initX + cellNumber;
+        set[setColumnNumber][setRowNumber] = color;
     });
 
     return set;
 }
 
+function calculateSetRowNumber (playingFieldRowNumber: number): number {
+    return Math.abs(PLAYING_FILED_ROWS - playingFieldRowNumber - 1);
+}
+
 function generateFigureStartPosition(figureBody: FigureBody): Point2D {
     let figureWidth = figureBody[0].length;
-    let startX = Math.ceil(PLAYING_FILED_WIDTH / 2 - figureWidth / 2);
+    let startX = Math.ceil(PLAYING_FILED_COLUMNS / 2 - figureWidth / 2);
 
     return {x: startX, y: -1};
 }
