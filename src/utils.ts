@@ -1,4 +1,4 @@
-import {Color, Figure, FigureBody, KeyCode, Point2D, Set, Transformation} from './types';
+import {Color, Figure, FigureBody, KeyCode, Matrix, Point2D, Set, Transformation} from './types';
 import {FIGURE_BODIES} from './figure_bodies';
 import {
     PLAYING_FILED_ROWS,
@@ -139,6 +139,53 @@ export function getFigureWidth(figure: Figure): number {
 
 export function calculatePlayingFieldRowNumber (setRowNumber: number): number {
     return Math.abs(PLAYING_FILED_ROWS - setRowNumber - 1);
+}
+
+export function rotateFigureClockwise(figure: Figure): Figure {
+    let position = copyPoint2D(figure.position);
+    let newBodyWidth = getFigureHeight(figure);
+    let newBodyHeight = getFigureWidth(figure);
+    let resultBody = generateTwoDimensionArray(newBodyHeight, newBodyWidth);
+
+    figureBodyIterator(
+        figure,
+        (cellNumber, lineNumber) => {
+            resultBody[cellNumber][lineNumber] = true;
+        },
+        (cellNumber, lineNumber) => {
+            resultBody[cellNumber][lineNumber] = false;
+        },
+    );
+    for (let i = 0; i < newBodyHeight; i++) {
+        resultBody[i] = resultBody[i].reverse();
+    }
+
+    return new Figure(position, resultBody, figure.color);
+}
+
+export function calculateFigureSetDistance(figure: Figure, set: Set): number {
+    let initX = figure.position.x;
+    let initY = figure.position.y;
+    let figureHeight = getFigureHeight(figure);
+    let figureWidth = getFigureWidth(figure);
+    let minimalDistance = PLAYING_FILED_ROWS;
+
+    for (let i = 0; i < figureWidth; i++) {
+        let figureBottomCellY = initY + figureHeight - 1;
+        for (let j = figureHeight - 1; j >= 0; j--) {
+            if (figure.body[j][i]) {
+                figureBottomCellY = initY + j;
+                break;
+            }
+        }
+        let setTopCellY = set[initX + i].length;
+        let distance = calculatePlayingFieldRowNumber(setTopCellY) - figureBottomCellY;
+        if (distance < minimalDistance) {
+            minimalDistance = distance;
+        }
+    }
+
+    return minimalDistance;
 }
 
 function checkPlayingFieldCollision(figure: Figure): boolean {
