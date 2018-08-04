@@ -7,6 +7,7 @@ export interface Transformation {
     name: string;
     apply: (figure: Figure, set: Set) => Figure;
     corrigible: boolean;
+    bonusPoints: number;
 }
 
 export interface Transformations {

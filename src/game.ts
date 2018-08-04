@@ -19,7 +19,7 @@ import {fromEvent} from 'rxjs/observable/fromEvent';
 import {merge} from 'rxjs/observable/merge';
 import {animationFrame} from 'rxjs/scheduler/animationFrame';
 import {Figure, PlayingField, Set, Transformation} from './types';
-import {MAX_FPS} from './constants';
+import {POINTS_ADD_FIGURE, MAX_FPS} from './constants';
 import {
     applyTransformations,
     createGravityTransformation,
@@ -79,7 +79,11 @@ function createGame(fps$: Observable<number>): Observable<PlayingField> {
     set$.pipe(
         skip(1),
         map(set => {
-            return 5;
+            let points = POINTS_ADD_FIGURE;
+            if (false) {
+                points += 100;
+            }
+            return points;
         }),
         filter(points => points > 0),
     ).subscribe((receivedPoints: number) => {
@@ -94,7 +98,10 @@ function createGame(fps$: Observable<number>): Observable<PlayingField> {
             () => allTransformations$,
             (figure, transformations) => { return {figure, transformations}; }
         ),
-        scan(applyTransformations, {processedFigure: undefined, initialFigure: undefined, set: set$}),
+        scan(
+            applyTransformations,
+            {processedFigure: undefined, initialFigure: undefined, set: set$, points: receivedPointsSubject$}
+        ),
         map(data => data.processedFigure),
         share(),
     );

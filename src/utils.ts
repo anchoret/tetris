@@ -20,7 +20,9 @@ export function generateFigure(): Figure {
 }
 
 export function createGravityTransformation(): Transformation {
-    return TRANSFORMATIONS[KeyCode.DOWN];
+    let transformation = Object.assign({}, TRANSFORMATIONS[KeyCode.DOWN]);
+    transformation.bonusPoints = 0;
+    return transformation;
 }
 
 export function getManualTransformation(keyCode: string): Transformation | undefined {
@@ -37,8 +39,10 @@ export function calculateSpeed(level: number): number {
 }
 
 export function applyTransformations(
-    {processedFigure, initialFigure, set}: {processedFigure: Figure, initialFigure: Figure, set: BehaviorSubject<Set>},
-    {figure, transformations}): {processedFigure: Figure, initialFigure: Figure, set: BehaviorSubject<Set>} {
+    {processedFigure, initialFigure, set, points}:
+        {processedFigure: Figure, initialFigure: Figure, set: BehaviorSubject<Set>, points: BehaviorSubject<number>},
+    {figure, transformations}):
+        {processedFigure: Figure, initialFigure: Figure, set: BehaviorSubject<Set>, points: BehaviorSubject<number>} {
 
     if (initialFigure === undefined || figure !== initialFigure) {
         processedFigure = figure;
@@ -64,12 +68,14 @@ export function applyTransformations(
         }
 
         processedFigure = newFigure;
+        points.next(transformation.bonusPoints);
     }
 
     return {
         processedFigure,
         initialFigure,
         set,
+        points,
     };
 }
 

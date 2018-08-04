@@ -7,7 +7,7 @@ import {
     getFigureHeight,
     calculatePlayingFieldRowNumber
 } from './utils';
-import {PLAYING_FILED_ROWS} from './constants';
+import {PLAYING_FILED_ROWS, POINTS_TRANSFORMATION_DROP, POINTS_TRANSFORMATION_MANUAL_DOWN} from './constants';
 
 export const TRANSFORMATIONS: Transformations = {};
 
@@ -20,6 +20,7 @@ TRANSFORMATIONS[KeyCode.LEFT] = {
         return new Figure(position, figure.body, figure.color);
     },
     corrigible: true,
+    bonusPoints: 0,
 };
 TRANSFORMATIONS[KeyCode.RIGHT] = {
     name: 'Right',
@@ -30,6 +31,7 @@ TRANSFORMATIONS[KeyCode.RIGHT] = {
         return new Figure(position, figure.body, figure.color);
     },
     corrigible: true,
+    bonusPoints: 0,
 };
 TRANSFORMATIONS[KeyCode.UP] = {
     name: 'Up',
@@ -55,6 +57,7 @@ TRANSFORMATIONS[KeyCode.UP] = {
         return new Figure(position, resultBody, figure.color);
     },
     corrigible: true,
+    bonusPoints: 0,
 };
 TRANSFORMATIONS[KeyCode.DOWN] = {
     name: 'Down',
@@ -65,6 +68,7 @@ TRANSFORMATIONS[KeyCode.DOWN] = {
         return new Figure(position, figure.body, figure.color);
     },
     corrigible: false,
+    bonusPoints: POINTS_TRANSFORMATION_MANUAL_DOWN,
 };
 TRANSFORMATIONS[KeyCode.SPACE] = {
     name: 'Drop',
@@ -95,4 +99,5 @@ TRANSFORMATIONS[KeyCode.SPACE] = {
         return new Figure(position, figure.body, figure.color);
     },
     corrigible: false,
+    bonusPoints: POINTS_TRANSFORMATION_DROP,
 };

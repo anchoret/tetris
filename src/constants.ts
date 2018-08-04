@@ -10,3 +10,6 @@ export const START_LEVEL: number = 1;
 export const POINTS_TO_INCREASE_LEVEL: number = 1000;
 export const SPEED_INCREASE_COEFFICIENT: number = 0.5;
 
+export const POINTS_ADD_FIGURE = 10;
+export const POINTS_TRANSFORMATION_MANUAL_DOWN = 1;
+export const POINTS_TRANSFORMATION_DROP = 10;
