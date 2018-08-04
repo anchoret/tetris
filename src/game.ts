@@ -27,6 +27,9 @@ import {
     generateEmptySet,
     getManualTransformation,
     isSetOverflow,
+    getFilledRowIndexes,
+    calculateFilledRowPoints,
+    removeSetRows,
 } from './utils';
 import {
     createGameSpeed,
@@ -80,8 +83,10 @@ function createGame(fps$: Observable<number>): Observable<PlayingField> {
         skip(1),
         map(set => {
             let points = POINTS_ADD_FIGURE;
-            if (false) {
-                points += 100;
+            let filledRowIndexes = getFilledRowIndexes(set);
+            if (filledRowIndexes.length > 0) {
+                points += calculateFilledRowPoints(filledRowIndexes);
+                removeSetRows(set, filledRowIndexes);
             }
             return points;
         }),

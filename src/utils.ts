@@ -1,4 +1,4 @@
-import {Color, Figure, FigureBody, KeyCode, Matrix, Point2D, Set, Transformation} from './types';
+import {Color, Figure, FigureBody, KeyCode, Point2D, Set, Transformation} from './types';
 import {FIGURE_BODIES} from './figure_bodies';
 import {
     PLAYING_FILED_ROWS,
@@ -6,7 +6,8 @@ import {
     POINTS_TO_INCREASE_LEVEL,
     SPEED_INCREASE_COEFFICIENT,
     START_LEVEL,
-    START_SPEED
+    START_SPEED,
+    POINTS_FILLED_ROW,
 } from './constants';
 import {TRANSFORMATIONS} from './transformations';
 import {BehaviorSubject} from 'rxjs/BehaviorSubject';
@@ -186,6 +187,60 @@ export function calculateFigureSetDistance(figure: Figure, set: Set): number {
     }
 
     return minimalDistance;
+}
+
+export function getFilledRowIndexes(set: Set): Array<number> {
+    let filledRowNumbers = new Array();
+    let setWidth = set.length;
+    let maxSetHeight = getMaxSetColumnHeight(set);
+    for (let i = 0; i < maxSetHeight; i++) {
+        for (let j = 0; j < setWidth; j++) {
+            if (!set[j][i]) {
+                break;
+            } else if (j === setWidth - 1) {
+                filledRowNumbers.push(i);
+            }
+        }
+    }
+
+    return filledRowNumbers;
+}
+
+export function calculateFilledRowPoints(filledRowIndexes: Array<number>): number {
+    return filledRowIndexes.length * POINTS_FILLED_ROW * filledRowIndexes.length;
+}
+
+export function removeSetRows(set: Set, rowIndexes: Array<number>): Set {
+    let needleDeleteRows = optimizeNeedleDeleteRows(rowIndexes);
+
+    needleDeleteRows.forEach((deleteCount, rowIndex) => {
+        set.forEach((column, columnIndex, set) => {
+            set[columnIndex].splice(rowIndex, deleteCount);
+        });
+    });
+
+    return set;
+}
+
+function optimizeNeedleDeleteRows(rowIndexes: Array<number>): Array<number> {
+    return rowIndexes.reduce(
+        (previousState: Array<number>, currentRowIndex: number): Array<number> => {
+            let previousRowIndex = previousState.length > 0 ? previousState.length - 1 : undefined;
+            let resultArray = previousState;
+            if (previousRowIndex !== undefined && previousRowIndex + previousState[previousRowIndex] === currentRowIndex) {
+                resultArray[previousRowIndex]++;
+            } else {
+                let previousDeleteRowCount = resultArray.reduce((previous, current) => previous + current, 0);
+                resultArray[currentRowIndex - previousDeleteRowCount] = 1;
+            }
+            return resultArray;
+        }, []);
+}
+
+function getMaxSetColumnHeight(set: Set): number {
+    let setColumnHeights = set.map(column => column.length);
+
+    return Math.max.apply(null, setColumnHeights);
 }
 
 function checkPlayingFieldCollision(figure: Figure): boolean {

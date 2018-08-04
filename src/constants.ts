@@ -13,3 +13,4 @@ export const SPEED_INCREASE_COEFFICIENT: number = 0.5;
 export const POINTS_ADD_FIGURE = 10;
 export const POINTS_TRANSFORMATION_MANUAL_DOWN = 1;
 export const POINTS_TRANSFORMATION_DROP = 10;
+export const POINTS_FILLED_ROW = 50;
