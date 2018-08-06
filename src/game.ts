@@ -11,7 +11,8 @@ import {
     bufferWhen,
     withLatestFrom,
     scan,
-    startWith, skip,
+    startWith,
+    skip,
 } from 'rxjs/operators';
 import {of} from 'rxjs/observable/of';
 import {interval} from 'rxjs/observable/interval';
@@ -103,15 +104,20 @@ function createGame(fps$: Observable<number>): Observable<PlayingField> {
             () => allTransformations$,
             (figure, transformations) => { return {figure, transformations}; }
         ),
+
         scan(
             applyTransformations,
-            {processedFigure: undefined, initialFigure: undefined, set: set$, points: receivedPointsSubject$}
-        ),
+            {
+                processedFigure: undefined,
+                initialFigure: undefined,
+                set: set$,
+                points: receivedPointsSubject$,
+            }),
         map(data => data.processedFigure),
         share(),
     );
 
-    return allTransformations$.pipe(
+    return currentFigure$.pipe(
         withLatestFrom(
             nextFigure$,
             currentFigure$,
