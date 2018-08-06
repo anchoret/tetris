@@ -86,7 +86,7 @@ export function generateEmptySet(): Set {
 
 export function isSetOverflow(set: Set): boolean {
     for (let columnNumber = 0; columnNumber < set.length; columnNumber++) {
-        if (set[columnNumber].length >= PLAYING_FILED_ROWS) {
+        if (set[columnNumber].length > PLAYING_FILED_ROWS) {
             return true;
         }
     }
