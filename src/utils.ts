@@ -63,7 +63,7 @@ export function applyTransformations(
             if (checkSetCollision(currentSet, newFigure)) {
                 continue;
             }
-        } else if (checkPlayingFieldCollision(newFigure) || checkSetCollision(currentSet, newFigure)) {
+        } else if (checkSetCollision(currentSet, newFigure)) {
             set.next(replenishSet(currentSet, processedFigure));
             break;
         }
@@ -279,7 +279,7 @@ function checkSetCollision(set: Set, figure: Figure): boolean {
     figureBodyIterator(figure, (cellNumber, lineNumber, color) => {
         let setRowNumber = calculateSetRowNumber(initY + lineNumber);
         let setColumnNumber = initX + cellNumber;
-        if (set[setColumnNumber][setRowNumber]) {
+        if (setRowNumber < 0 || set[setColumnNumber][setRowNumber]) {
             collision = true;
 
             return;
@@ -303,7 +303,7 @@ function replenishSet(set: Set, figure: Figure): Set {
 }
 
 function calculateSetRowNumber (playingFieldRowNumber: number): number {
-    return Math.abs(PLAYING_FILED_ROWS - playingFieldRowNumber - 1);
+    return PLAYING_FILED_ROWS - 1 - playingFieldRowNumber;
 }
 
 function generateFigureStartPosition(figureBody: FigureBody): Point2D {
