@@ -63,7 +63,7 @@ function createGame(fps$: Observable<number>): Observable<PlayingField> {
     ticks$.subscribe();
 
     let nextFigure$ = new BehaviorSubject<Figure>(generateFigure());
-    let gravityTransformations$ = ticks$.pipe(
+    let gravityTransformations$ = merge(ticks$, nextFigure$).pipe(
         map((): Transformation => createGravityTransformation()),
     );
 
