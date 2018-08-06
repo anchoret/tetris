@@ -123,11 +123,10 @@ function createGame(fps$: Observable<number>): Observable<PlayingField> {
         distinctUntilChanged(),
         withLatestFrom(
             nextFigure$,
-            currentFigure$,
             set$,
             score$,
             level$,
-            (_, nextFigure, currentFigure, set, score, level) => {
+            (currentFigure, nextFigure, set, score, level) => {
                 return new PlayingField(nextFigure, currentFigure, set, score, level);
             }
         )
