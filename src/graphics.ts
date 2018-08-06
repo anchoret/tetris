@@ -22,6 +22,7 @@ export function createCanvasElement(): CanvasRenderingContext2D {
 
 export function renderPlayingField(renderingContext: CanvasRenderingContext2D, playingField: PlayingField) {
     renderBackground(renderingContext);
+    renderLevel(renderingContext, playingField.level);
     renderScore(renderingContext, playingField.score);
     renderCurrentFigure(renderingContext, playingField.currentFigure);
     renderNextFigure(renderingContext, playingField.nextFigure);
@@ -38,11 +39,20 @@ export function renderGameOver(renderingContext: CanvasRenderingContext2D) {
     drawText(renderingContext, 'GAME OVER!', textX, textY, 'black', 25);
 }
 
-function renderScore(renderingContext: CanvasRenderingContext2D, score: number) {
-    let textX = CANVAS_WIDTH / 2;
-    let textY = CANVAS_HEIGHT / 2;
+function renderLevel(renderingContext: CanvasRenderingContext2D, level: number) {
+    let position = getLevelAreaPosition();
+    let size = getLevelAreaSize();
+    let textX = position.x + size.width / 2;
+    let textY = position.y + size.height / 2 + 10;
+    drawText(renderingContext, level.toString(), textX, textY, 'black', 50);
+}
 
-    drawText(renderingContext, score.toString(), textX, textY, 'rgba(0, 0, 0, 0.1)', 150);
+function renderScore(renderingContext: CanvasRenderingContext2D, score: number) {
+    let position = getScoreAreaPosition();
+    let size = getScoreAreaSize();
+    let textX = position.x + size.width / 2;
+    let textY = position.y + size.height / 2;
+    drawText(renderingContext, score.toString(), textX, textY, 'black', 28);
 }
 
 function renderCurrentFigure(renderingContext: CanvasRenderingContext2D, figure: Figure) {
@@ -94,7 +104,10 @@ function renderBackground(renderingContext: CanvasRenderingContext2D) {
     renderingContext.fillStyle = '#eee2e1';
     renderingContext.fillRect(0, 0, CANVAS_WIDTH, CANVAS_HEIGHT);
     renderMainArea(renderingContext);
+    renderLevelArea(renderingContext);
+    renderScoreArea(renderingContext);
     renderNextFigureArea(renderingContext);
+
 }
 
 function renderMainArea(renderingContext: CanvasRenderingContext2D) {
@@ -114,7 +127,40 @@ function renderNextFigureArea(renderingContext: CanvasRenderingContext2D) {
     );
 }
 
-function getNextFigureAreaPosition(): Point2D {
+function renderLevelArea(renderingContext: CanvasRenderingContext2D) {
+    renderingContext.fillStyle = '#b6aeee';
+    let position = getLevelAreaPosition();
+    let size = getLevelAreaSize();
+    renderingContext.fillRect(
+        position.x,
+        position.y,
+        size.width,
+        size.height,
+    );
+
+    let textX = position.x + size.width / 2;
+    let textY = position.y + 10;
+    drawText(renderingContext, 'Level:', textX, textY, 'black', 14);
+}
+
+function renderScoreArea(renderingContext: CanvasRenderingContext2D) {
+    renderingContext.fillStyle = '#b6aeee';
+    let position = getScoreAreaPosition();
+    let size = getScoreAreaSize();
+    renderingContext.fillRect(
+        position.x,
+        position.y,
+        size.width,
+        size.height,
+    );
+
+    let textX = position.x + size.width / 2;
+    let textY = position.y + 10;
+    drawText(renderingContext, 'Score:', textX, textY, 'black', 14);
+}
+
+
+function getNextFigureAreaPosition() {
     return {
         x: PLAYING_FILED_WIDTH + ADDITIONAL_COLUMN_PADDING,
         y: PLAYING_FILED_HEIGHT / 2 + ADDITIONAL_COLUMN_PADDING,
@@ -124,6 +170,35 @@ function getNextFigureAreaPosition(): Point2D {
 function getNextFigureAreaSize() {
     return {
         height: PLAYING_FILED_HEIGHT / 2 - 2 * ADDITIONAL_COLUMN_PADDING,
+        width: ADDITIONAL_COLUMN_WIDTH - 2 * ADDITIONAL_COLUMN_PADDING,
+    };
+}
+
+function getLevelAreaPosition() {
+    return {
+        x: PLAYING_FILED_WIDTH + ADDITIONAL_COLUMN_PADDING,
+        y: 0 + ADDITIONAL_COLUMN_PADDING,
+    };
+}
+
+function getLevelAreaSize() {
+    return {
+        height: (PLAYING_FILED_HEIGHT / 2 - 2 * ADDITIONAL_COLUMN_PADDING) / 2,
+        width: ADDITIONAL_COLUMN_WIDTH - 2 * ADDITIONAL_COLUMN_PADDING,
+    };
+}
+
+function getScoreAreaPosition() {
+    let scoreAreaSize = getScoreAreaSize();
+    return {
+        x: PLAYING_FILED_WIDTH + ADDITIONAL_COLUMN_PADDING,
+        y: PLAYING_FILED_HEIGHT / 2 - scoreAreaSize.height,
+    };
+}
+
+function getScoreAreaSize() {
+    return {
+        height: (PLAYING_FILED_HEIGHT / 2 - 2 * ADDITIONAL_COLUMN_PADDING) / 2,
         width: ADDITIONAL_COLUMN_WIDTH - 2 * ADDITIONAL_COLUMN_PADDING,
     };
 }
