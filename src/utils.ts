@@ -218,6 +218,14 @@ export function removeSetRows(set: Set, rowIndexes: Array<number>): Set {
     needleDeleteRows.forEach((deleteCount, rowIndex) => {
         updatedSet.forEach((column, columnIndex, set) => {
             set[columnIndex].splice(rowIndex, deleteCount);
+            let columnHeight = set[columnIndex].length;
+            for (let i = columnHeight - 1; i >= 0; i--) {
+                if (!set[columnIndex][i]) {
+                    set[columnIndex].length--;
+                } else {
+                    break;
+                }
+            }
         });
     });
 
