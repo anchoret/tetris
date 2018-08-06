@@ -17,7 +17,7 @@ export function generateFigure(): Figure {
     let figureBody: FigureBody = generateFigureBody();
     let startPosition = generateFigureStartPosition(figureBody);
 
-    return new Figure(startPosition, figureBody, generateColor());
+    return applyRandomRotates(new Figure(startPosition, figureBody, generateColor()));
 }
 
 export function createGravityTransformation(): Transformation {
@@ -142,23 +142,24 @@ export function calculatePlayingFieldRowNumber (setRowNumber: number): number {
     return Math.abs(PLAYING_FILED_ROWS - setRowNumber - 1);
 }
 
-export function rotateFigureClockwise(figure: Figure): Figure {
+export function rotateFigureClockwise(figure: Figure, count: number = 1): Figure {
     let position = copyPoint2D(figure.position);
     let newBodyWidth = getFigureHeight(figure);
     let newBodyHeight = getFigureWidth(figure);
     let resultBody = generateTwoDimensionArray(newBodyHeight, newBodyWidth);
-
-    figureBodyIterator(
-        figure,
-        (cellNumber, lineNumber) => {
-            resultBody[cellNumber][lineNumber] = true;
-        },
-        (cellNumber, lineNumber) => {
-            resultBody[cellNumber][lineNumber] = false;
-        },
-    );
-    for (let i = 0; i < newBodyHeight; i++) {
-        resultBody[i] = resultBody[i].reverse();
+    for (let i = 0; i <= count; i++) {
+        figureBodyIterator(
+            figure,
+            (cellNumber, lineNumber) => {
+                resultBody[cellNumber][lineNumber] = true;
+            },
+            (cellNumber, lineNumber) => {
+                resultBody[cellNumber][lineNumber] = false;
+            },
+        );
+        for (let i = 0; i < newBodyHeight; i++) {
+            resultBody[i] = resultBody[i].reverse();
+        }
     }
 
     return new Figure(position, resultBody, figure.color);
@@ -220,6 +221,21 @@ export function removeSetRows(set: Set, rowIndexes: Array<number>): Set {
     });
 
     return set;
+}
+
+function applyRandomRotates(figure: Figure): Figure {
+    let rotateCount = getRandomInt(0, 3);
+    let resultFigure = figure;
+    if (rotateCount > 0) {
+        resultFigure = rotateFigureClockwise(figure, rotateCount);
+        resultFigure = new Figure(
+            generateFigureStartPosition(resultFigure.body),
+            resultFigure.body,
+            resultFigure.color
+        );
+    }
+
+    return resultFigure;
 }
 
 function optimizeNeedleDeleteRows(rowIndexes: Array<number>): Array<number> {
