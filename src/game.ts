@@ -13,6 +13,7 @@ import {
     scan,
     startWith,
     skip,
+    distinctUntilChanged,
 } from 'rxjs/operators';
 import {of} from 'rxjs/observable/of';
 import {interval} from 'rxjs/observable/interval';
@@ -118,6 +119,7 @@ function createGame(fps$: Observable<number>): Observable<PlayingField> {
     );
 
     return currentFigure$.pipe(
+        distinctUntilChanged(),
         withLatestFrom(
             nextFigure$,
             currentFigure$,
