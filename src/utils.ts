@@ -10,7 +10,6 @@ import {
     POINTS_FILLED_ROW,
 } from './constants';
 import {TRANSFORMATIONS} from './transformations';
-import {BehaviorSubject} from 'rxjs/BehaviorSubject';
 
 
 export function generateFigure(): Figure {
@@ -40,17 +39,18 @@ export function calculateSpeed(level: number): number {
 }
 
 export function applyTransformations(
-    {processedFigure, initialFigure, set, points}:
-        {processedFigure: Figure, initialFigure: Figure, set: BehaviorSubject<Set>, points: BehaviorSubject<number>},
-    {figure, transformations}):
-        {processedFigure: Figure, initialFigure: Figure, set: BehaviorSubject<Set>, points: BehaviorSubject<number>} {
+    {processedFigure, initialFigure, isFinale = false, bonusPoints = 0}:
+        {processedFigure: Figure, initialFigure: Figure, isFinale: boolean, bonusPoints: number},
+    {figure, transformations, currentSet}):
+        {processedFigure: Figure, initialFigure: Figure, isFinale: boolean, bonusPoints: number} {
+
+    isFinale = false;
+    bonusPoints = 0;
 
     if (initialFigure === undefined || figure !== initialFigure) {
         processedFigure = figure;
         initialFigure = figure;
     }
-
-    let currentSet = set.getValue();
 
     for (let transformation of transformations) {
         let newFigure = transformation.apply(processedFigure, currentSet);
@@ -64,19 +64,19 @@ export function applyTransformations(
                 continue;
             }
         } else if (checkSetCollision(currentSet, newFigure)) {
-            set.next(replenishSet(currentSet, processedFigure));
+            isFinale = true;
             break;
         }
 
         processedFigure = newFigure;
-        points.next(transformation.bonusPoints);
+        bonusPoints += transformation.bonusPoints;
     }
 
     return {
         processedFigure,
         initialFigure,
-        set,
-        points,
+        isFinale,
+        bonusPoints,
     };
 }
 
@@ -213,14 +213,38 @@ export function calculateFilledRowPoints(filledRowIndexes: Array<number>): numbe
 
 export function removeSetRows(set: Set, rowIndexes: Array<number>): Set {
     let needleDeleteRows = optimizeNeedleDeleteRows(rowIndexes);
+    let updatedSet = copySet(set);
 
     needleDeleteRows.forEach((deleteCount, rowIndex) => {
-        set.forEach((column, columnIndex, set) => {
+        updatedSet.forEach((column, columnIndex, set) => {
             set[columnIndex].splice(rowIndex, deleteCount);
         });
     });
 
-    return set;
+    return updatedSet;
+}
+
+export function replenishSet(set: Set, figure: Figure): Set {
+    let initX = figure.position.x;
+    let initY = figure.position.y;
+    let updatedSet = copySet(set);
+
+    figureBodyIterator(figure, (cellNumber, lineNumber, color) => {
+        let setRowNumber = calculateSetRowNumber(initY + lineNumber);
+        let setColumnNumber = initX + cellNumber;
+        updatedSet[setColumnNumber][setRowNumber] = color;
+    });
+
+    return updatedSet;
+}
+
+function copySet(set: Set): Set {
+    let updatedSet = generateEmptySet();
+    set.forEach((column, columnIndex) => {
+        updatedSet[columnIndex] = column.slice(0);
+    });
+
+    return updatedSet;
 }
 
 function applyRandomRotates(figure: Figure): Figure {
@@ -303,19 +327,6 @@ function checkSetCollision(set: Set, figure: Figure): boolean {
     });
 
     return collision;
-}
-
-function replenishSet(set: Set, figure: Figure): Set {
-    let initX = figure.position.x;
-    let initY = figure.position.y;
-
-    figureBodyIterator(figure, (cellNumber, lineNumber, color) => {
-        let setRowNumber = calculateSetRowNumber(initY + lineNumber);
-        let setColumnNumber = initX + cellNumber;
-        set[setColumnNumber][setRowNumber] = color;
-    });
-
-    return set;
 }
 
 function calculateSetRowNumber (playingFieldRowNumber: number): number {

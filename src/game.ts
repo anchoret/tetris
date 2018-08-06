@@ -12,7 +12,6 @@ import {
     withLatestFrom,
     scan,
     startWith,
-    skip,
     distinctUntilChanged,
 } from 'rxjs/operators';
 import {of} from 'rxjs/observable/of';
@@ -31,7 +30,7 @@ import {
     isSetOverflow,
     getFilledRowIndexes,
     calculateFilledRowPoints,
-    removeSetRows,
+    removeSetRows, replenishSet,
 } from './utils';
 import {
     createGameSpeed,
@@ -81,46 +80,60 @@ function createGame(fps$: Observable<number>): Observable<PlayingField> {
         );
 
     let set$ = new BehaviorSubject<Set>(generateEmptySet());
-    set$.subscribe(_ => nextFigure$.next(generateFigure()));
-    set$.pipe(
-        skip(1),
-        map(set => {
-            let points = POINTS_ADD_FIGURE;
-            let filledRowIndexes = getFilledRowIndexes(set);
-            if (filledRowIndexes.length > 0) {
-                points += calculateFilledRowPoints(filledRowIndexes);
-                removeSetRows(set, filledRowIndexes);
-            }
-            return points;
-        }),
-        filter(points => points > 0),
-    ).subscribe((receivedPoints: number) => {
-        receivedPointsSubject$.next(receivedPoints);
-    });
 
-    let currentFigure$ = nextFigure$.pipe(
+    let processedFigure$ = nextFigure$.pipe(
         startWith(generateFigure()),
         pairwise(),
         map(pair => pair[0] ),
         switchMap(
             () => allTransformations$,
-            (figure, transformations) => { return {figure, transformations}; }
+            (figure: Figure, transformations: Array<Transformation>) => { return {figure, transformations}; }
         ),
-
+        withLatestFrom(
+            set$,
+            (
+                {figure, transformations}: {figure: Figure, transformations: Array<Transformation>},
+                currentSet: Set
+            ): {figure: Figure, transformations: Array<Transformation>, currentSet: Set} => {
+                return {figure, transformations, currentSet};
+            }
+        ),
         scan(
             applyTransformations,
             {
                 processedFigure: undefined,
                 initialFigure: undefined,
-                set: set$,
-                points: receivedPointsSubject$,
+                isFinale: false,
+                bonusPoints: 0,
             }),
-        map(data => data.processedFigure),
         share(),
     );
 
-    return currentFigure$.pipe(
+    processedFigure$.subscribe(
+        data => {
+            let points = data.bonusPoints;
+            if (data.isFinale) {
+                let replenishedSet = replenishSet(set$.getValue(), data.processedFigure);
+                points += POINTS_ADD_FIGURE;
+                let filledRowIndexes = getFilledRowIndexes(replenishedSet);
+                if (filledRowIndexes.length > 0) {
+                    points += calculateFilledRowPoints(filledRowIndexes);
+                    set$.next(removeSetRows(replenishedSet, filledRowIndexes));
+                } else {
+                    set$.next(replenishedSet);
+                }
+                nextFigure$.next(generateFigure());
+            }
+            receivedPointsSubject$.next(points);
+        }
+    );
+
+    let currentFigure$ = processedFigure$.pipe(
+        map(data => data.processedFigure),
         distinctUntilChanged(),
+    );
+
+    return currentFigure$.pipe(
         withLatestFrom(
             nextFigure$,
             set$,
