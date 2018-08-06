@@ -60,6 +60,7 @@ function createGame(fps$: Observable<number>): Observable<PlayingField> {
         takeUntil(gameOver$),
         share(),
     );
+    ticks$.subscribe();
 
     let nextFigure$ = new BehaviorSubject<Figure>(generateFigure());
     let gravityTransformations$ = ticks$.pipe(

@@ -4,6 +4,7 @@ import {
     calculateLevel as calculateLevelDefault,
     calculateSpeed as calculateSpeedDefault
 } from './utils';
+import {MAX_SPEED} from './constants';
 
 
 export function createReceivedPointsSubject(initialPoints = 0): BehaviorSubject<number> {
@@ -42,5 +43,6 @@ export function createGameSpeed(
 
     return level$.pipe(
         map(level => calculateSpeedCallback.call(null, level)),
+        filter(level => level <= MAX_SPEED),
     );
 }
